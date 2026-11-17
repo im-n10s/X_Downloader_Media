@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Downloader Media</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header with Ultra-Premium X Branding -->
+    <header class="app-header">
+      <div class="header-branding">
+        <div class="logo-wrapper">
+          <img src="icons/icon48.png" alt="Logo" class="app-logo">
+          <span class="logo-glow"></span>
+        </div>
+        <div class="header-titles">
+          <div class="title-row">
+            <h1>X Downloader Media</h1>
+            <span class="badge-single">SINGLE ZIP</span>
+          </div>
+          <span class="subtitle">High-speed in-memory media archiver</span>
+        </div>
+      </div>
+      <span class="badge-version">v5.0</span>
+    </header>
+
+    <!-- Mode Switcher Tabs: Profile Media vs Account Backup -->
+    <div class="mode-tabs">
+      <button id="tabProfile" class="mode-tab active" type="button">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Profile Media</span>
+      </button>
+      <button id="tabBackup" class="mode-tab" type="button">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+        </svg>
+        <span>Backup (My Account)</span>
+      </button>
+    </div>
+
+    <!-- ==================== MODE 1: PROFILE DOWNLOADER ==================== -->
+    <div id="profileSection" class="mode-section">
+      <!-- Profile Detection Card with Dynamic High-Res Avatar -->
+      <div id="profileCard" class="card profile-card">
+        <div class="profile-header">
+          <div class="avatar-wrapper">
+            <img id="profileAvatarImg" src="" alt="Profile Avatar" class="profile-avatar hidden">
+            <div id="profileAvatarFallback" class="profile-avatar-fallback">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div class="avatar-ring-glow"></div>
+          </div>
+          <div class="profile-info">
+            <div class="handle-row">
+              <span id="targetHandle" class="target-handle">Detecting profile...</span>
+              <span id="statusBadge" class="status-badge badge-idle">Checking</span>
+            </div>
+            <span id="targetUserId" class="user-id-sub">Scanning active tab context</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert / Not on Twitter notice (hidden by default) -->
+      <div id="notOnTwitterBanner" class="alert-banner hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" class="alert-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div class="alert-content">
+          <strong>Profile required</strong>
+          <span>Navigate to any Twitter/X profile (e.g. <code>x.com/NASA</code>) to archive media.</span>
+        </div>
+      </div>
+
+      <!-- Media Filter Toggles & Max Limit Card -->
+      <div class="card filters-card">
+        <div class="filters-header">
+          <span class="filters-title">MEDIA SELECTION</span>
+          <span class="filters-hint">Custom Extraction Filters</span>
+        </div>
+        <div class="toggles-grid">
+          <!-- Images Toggle -->
+          <label class="toggle-control">
+            <div class="toggle-info">
+              <div class="toggle-icon-wrap icon-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <rect x="3" y="3" width="18" height="18" rx="4" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-name">Images</span>
+                <span class="toggle-sub">Original Quality</span>
+              </div>
+            </div>
+            <input type="checkbox" id="toggleImages" checked>
+            <span class="switch-slider"></span>
+          </label>
+
+          <!-- Videos Toggle -->
+          <label class="toggle-control">
+            <div class="toggle-info">
+              <div class="toggle-icon-wrap icon-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <rect x="2" y="4" width="14" height="16" rx="3" />
+                  <path d="M16 10l5-3v10l-5-3v-4z" />
+                </svg>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-name">Videos</span>
+                <span class="toggle-sub">Highest Bitrate MP4</span>
+              </div>
+            </div>
+            <input type="checkbox" id="toggleVideos" checked>
+            <span class="switch-slider"></span>
+          </label>
+
+          <!-- Reposts Toggle -->
+          <label class="toggle-control">
+            <div class="toggle-info">
+              <div class="toggle-icon-wrap icon-pink">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M17 1l4 4-4 4" />
+                  <path d="M3 11V9a4 4 0 014-4h14" />
+                  <path d="M7 23l-4-4 4-4" />
+                  <path d="M21 13v2a4 4 0 01-4 4H3" />
+                </svg>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-name">Include Reposts</span>
+                <span class="toggle-sub">Retweeted Media</span>
+              </div>
+            </div>
+            <input type="checkbox" id="toggleReposts" checked>
+            <span class="switch-slider"></span>
+          </label>
+
+          <!-- Max Media Limit Setting Row -->
+          <div class="limit-control-row">
+            <div class="toggle-info">
+              <div class="toggle-icon-wrap icon-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 3" />
+                </svg>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-name">Max Media Limit</span>
+                <span class="toggle-sub">Cap items to extract</span>
+              </div>
+            </div>
+            <div class="limit-action-group">
+              <input type="number" id="limitInput" class="limit-input" min="1" max="50000" placeholder="100" value="100" disabled>
+              <label class="toggle-control-inline">
+                <input type="checkbox" id="toggleLimit">
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODE 2: BACKUP DATA (MY ACCOUNT) ==================== -->
+    <div id="backupSection" class="mode-section hidden">
+      <!-- Backup Account Header Card -->
+      <div class="card backup-account-card">
+        <div class="backup-account-header">
+          <div class="backup-icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+          </div>
+          <div class="backup-account-info">
+            <div class="handle-row">
+              <span class="backup-account-title">Backup Data (My Account)</span>
+              <span class="status-badge badge-backup">Private Session</span>
+            </div>
+            <span class="backup-account-sub">Archive all media from your personal Bookmarks & Likes</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup Selection Card -->
+      <div class="card filters-card">
+        <div class="filters-header">
+          <span class="filters-title">BACKUP SOURCES</span>
+          <span class="filters-hint">Personal Media Collections</span>
+        </div>
+        <div class="toggles-grid">
+          <!-- Backup Bookmarks Toggle -->
+          <label class="toggle-control">
+            <div class="toggle-info">
+              <div class="toggle-icon-wrap icon-amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                </svg>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-name">Backup Bookmarks</span>
+                <span class="toggle-sub">Saved Bookmarks Media</span>
+              </div>
+            </div>
+            <input type="checkbox" id="toggleBackupBookmarks" checked>
+            <span class="switch-slider"></span>
+          </label>
+
+          <!-- Backup Likes Toggle -->
+          <label class="toggle-control">
+            <div class="toggle-info">
+              <div class="toggle-icon-wrap icon-rose">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                </svg>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-name">Backup Likes</span>
+                <span class="toggle-sub">Liked Tweets Media</span>
+              </div>
+            </div>
+            <input type="checkbox" id="toggleBackupLikes" checked>
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Card (Shared between Profile & Backup modes) -->
+    <div class="card progress-card">
+      <div class="progress-label-row">
+        <div class="status-with-spinner">
+          <span id="spinnerIcon" class="spinner hidden"></span>
+          <span id="statusMessage" class="status-text">Ready to archive</span>
+        </div>
+        <span id="progressPercentage" class="progress-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressBar" class="progress-fill" style="width: 0%;"></div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-label">Total Media</span>
+          <span id="statTotal" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Images</span>
+          <span id="statImages" class="stat-value text-cyan">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Videos</span>
+          <span id="statVideos" class="stat-value text-purple">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thumbnail Preview Stream -->
+    <div id="previewSection" class="preview-section hidden">
+      <div class="preview-title-row">
+        <span>Recent Media Buffered</span>
+        <span id="previewCount" class="preview-count">0 items</span>
+      </div>
+      <div id="thumbnailGrid" class="thumbnail-grid">
+        <!-- Dynamically injected thumbnails -->
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <!-- Profile Downloader Button -->
+      <button id="btnDownload" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="18" height="18">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <span>Download Media (Single ZIP)</span>
+      </button>
+
+      <!-- Dedicated Backup Button -->
+      <button id="btnStartBackup" class="btn btn-backup hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="18" height="18">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        <span>Start Backup (Single ZIP)</span>
+      </button>
+
+      <!-- Cancel Button -->
+      <button id="btnCancel" class="btn btn-outline hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span>Cancel Operation</span>
+      </button>
+    </div>
+
+    <!-- Destination & Feature Footnote -->
+    <footer class="app-footer">
+      <div class="dest-info">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+          <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+        </svg>
+        <span id="destFolderText">Target: [Handle]_Media.zip (1 Prompt)</span>
+      </div>
+      <div class="feature-tag">Original Photos &bull; Highest Bitrate MP4 &bull; In-Memory Single Batch</div>
+
+      <!-- EXACT REQUIRED CUSTOM FOOTER WITH SOCIAL & SUPPORT -->
+      <div class="creator-footer">
+        <div class="creator-main-row">
+          <span class="creator-text">Created with ❤️ By n10s_exe</span>
+          <div class="creator-actions">
+            <a href="https://x.com/n10s_exe" id="linkFollowX" class="footer-social-btn follow-x-btn" title="Follow @n10s_exe on X">
+              <svg class="x-logo-svg" viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              <span>Follow</span>
+            </a>
+            <a href="https://github.com/im-n10s" id="linkGithub" class="footer-social-btn github-btn" title="Visit GitHub profile: @im-n10s">
+              <svg class="github-logo-svg" viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+              <span>GitHub</span>
+            </a>
+          </div>
+        </div>
+        <div class="support-divider"></div>
+        <button id="btnDonateUsdt" class="support-usdt-btn" type="button" title="Click to copy USDT (TRC20) address: TEQFQ3yZejzivZ8u2rVUp1QKQCzAgrEtjk">
+          <div class="support-left">
+            <svg class="usdt-icon-svg" viewBox="0 0 32 32" width="13" height="13">
+              <circle cx="16" cy="16" r="16" fill="#26A17B"/>
+              <path fill="#ffffff" d="M17.9 17.4v-.002c-.1.008-.7.042-1.9.042-1 0-1.7-.03-2-.042v.002c-3.9-.17-6.8-1.03-6.8-2.05 0-1.02 2.9-1.87 6.8-2.04v3.24c.25.02 1 .06 2 .06 1.2 0 1.8-.05 1.9-.06v-3.24c3.9.17 6.8 1.02 6.8 2.04 0 1.02-2.9 1.88-6.8 2.05zm0-4.32V10.7h5.4V7.7H8.7v3h5.4v2.38c-4.4.2-7.7 1.25-7.7 2.52s3.3 2.32 7.7 2.52v7.7h3.8v-7.7c4.4-.2 7.7-1.25 7.7-2.52 0-1.27-3.3-2.32-7.7-2.52z"/>
+            </svg>
+            <span id="supportBtnText">Support Dev (USDT TRC20)</span>
+          </div>
+          <span id="copyBadgeText" class="copy-pill">Copy</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

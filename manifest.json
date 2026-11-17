@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "X Downloader Media",
+  "version": "5.0.0",
+  "description": "Ultra-premium media archiver for Twitter/X profiles and personal account backups. Downloads original photos, highest bitrate MP4 videos, Bookmarks, and Likes into a single in-memory ZIP archive.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "cookies",
+    "downloads",
+    "activeTab",
+    "storage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "*://*.twitter.com/*",
+    "*://*.x.com/*",
+    "*://*.twimg.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "X Downloader Media",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.twitter.com/*",
+        "*://*.x.com/*"
+      ],
+      "js": ["inject.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "*://*.twitter.com/*",
+        "*://*.x.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
