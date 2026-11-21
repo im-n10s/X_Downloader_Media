@@ -129,6 +129,31 @@
   }
 
   /**
+   * Primary Method: Instant DOM Extraction of Logged-in User's Avatar.
+   * Extracts avatar from the sidebar account switcher or navigation on x.com / twitter.com.
+   */
+  function extractLoggedInUserAvatarFromDOM() {
+    const selectors = [
+      '[data-testid="SideNav_AccountSwitcher_Button"] img[src*="pbs.twimg.com/profile_images"]',
+      '[data-testid="SideNav_AccountSwitcher_Button"] img',
+      '[data-testid*="AccountSwitcher"] img[src*="pbs.twimg.com/profile_images"]',
+      '[data-testid*="AccountSwitcher"] img',
+      '[aria-label*="Account menu" i] img[src*="pbs.twimg.com/profile_images"]',
+      'header nav a[href*="/"] img[src*="pbs.twimg.com/profile_images"]',
+      'nav[role="navigation"] [role="button"] img[src*="pbs.twimg.com/profile_images"]'
+    ];
+
+    for (const sel of selectors) {
+      const img = document.querySelector(sel);
+      if (img && img.src && !img.src.includes('default_profile')) {
+        return upgradeAvatarUrl(img.src);
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * User ID (rest_id) extraction from DOM:
    * 1. Follow/Unfollow button testid: data-testid="<userId>-follow"
    * 2. UserActions button testid: data-testid="<userId>-userActions"
@@ -192,12 +217,21 @@
     const handle = extractProfileHandle();
     const userId = extractUserIdFromDOM();
     const avatarUrl = extractAvatarUrlFromDOM();
+    const loggedInAvatarUrl = extractLoggedInUserAvatarFromDOM();
+
+    // Cache logged-in avatar if found
+    if (loggedInAvatarUrl) {
+      try {
+        chrome.storage.local.set({ cachedMyAvatar: loggedInAvatarUrl });
+      } catch (e) {}
+    }
 
     return {
       isProfile: Boolean(handle),
       handle: handle,
       userId: userId,
       avatarUrl: avatarUrl,
+      loggedInAvatarUrl: loggedInAvatarUrl,
       url: window.location.href
     };
   }
@@ -230,7 +264,25 @@
       sendResponse(getProfileContext());
       return true;
     }
+    if (message.action === 'GET_LOGGED_IN_USER_DOM') {
+      const loggedInAvatarUrl = extractLoggedInUserAvatarFromDOM();
+      if (loggedInAvatarUrl) {
+        try {
+          chrome.storage.local.set({ cachedMyAvatar: loggedInAvatarUrl });
+        } catch (e) {}
+      }
+      sendResponse({ loggedInAvatarUrl: loggedInAvatarUrl });
+      return true;
+    }
   });
+
+  // Try caching logged-in avatar on content script initial load
+  try {
+    const initialAvatar = extractLoggedInUserAvatarFromDOM();
+    if (initialAvatar) {
+      chrome.storage.local.set({ cachedMyAvatar: initialAvatar });
+    }
+  } catch (e) {}
 
   // Request credentials from inject.js
   window.postMessage(

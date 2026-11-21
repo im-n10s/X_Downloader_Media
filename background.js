@@ -33,6 +33,17 @@ const USER_BY_SCREEN_NAME_QUERY_IDS = [
   'k5vtQF5VJYZBQJDqlqICwA'
 ];
 
+// Fallback GraphQL query IDs for UserByRestId
+const USER_BY_REST_ID_QUERY_IDS = [
+  'xc8f1g2ipSd6jhWMHXHA3A',
+  '1x-tqK9gY7-yR1x4v8K4kg',
+  'L2pDnd9hk445h1p6z8Qk8w',
+  'Vf8si2dfv1zEjPf2D_qPrg',
+  'GazOglASt9vG86c125q_oQ',
+  't-BPm4KxuhGKnOOPBqq5IQ',
+  'WzHNnGMd5zeekmfl9sZ-dQ'
+];
+
 // Fallback GraphQL query IDs for Bookmarks
 const BOOKMARKS_QUERY_IDS = [
   't2_mK2_8i32P_rM9_yQ9vQ',
@@ -124,6 +135,8 @@ let currentDownloadId = null;
  * from falling back to generic "download.zip" or "download (1).zip".
  */
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+  if (item.byExtensionId !== chrome.runtime.id) return;
+
   const isOurDownload =
     item.byExtensionId === chrome.runtime.id ||
     (currentDownloadId && item.id === currentDownloadId) ||
@@ -223,6 +236,9 @@ function buildApiHeaders(ct0) {
   };
 }
 
+// Cache for authenticated user profile info
+let cachedAuthUser = null;
+
 /**
  * Resolves current authenticated user credentials (ID, handle, avatar).
  */
@@ -242,25 +258,111 @@ async function getAuthenticatedUser(session) {
     } catch (e) {}
   }
 
-  // 2. Verify Credentials endpoint
-  try {
-    const headers = buildApiHeaders(session.ct0);
-    const resp = await fetch(`${session.baseUrl}/1.1/account/verify_credentials.json`, {
-      method: 'GET',
-      headers: headers,
-      credentials: 'include'
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data.id_str) userId = data.id_str;
-      if (data.screen_name) screenName = data.screen_name;
-      if (data.profile_image_url_https) {
-        avatarUrl = upgradeAvatarUrl(data.profile_image_url_https);
-      }
-    }
-  } catch (e) {}
+  // 2. Direct REST API: verify_credentials endpoint
+  const verifyEndpoints = [
+    'https://x.com/i/api/1.1/account/verify_credentials.json',
+    'https://twitter.com/i/api/1.1/account/verify_credentials.json',
+    `${session.baseUrl}/i/api/1.1/account/verify_credentials.json`,
+    'https://api.twitter.com/1.1/account/verify_credentials.json',
+    `${session.baseUrl}/1.1/account/verify_credentials.json`
+  ];
 
-  return { userId, screenName, avatarUrl };
+  for (const endpoint of verifyEndpoints) {
+    try {
+      const headers = {
+        'authorization': TWITTER_BEARER_TOKEN,
+        'x-csrf-token': session.ct0,
+        'x-twitter-auth-type': 'OAuth2Session',
+        'x-twitter-active-user': 'yes',
+        'content-type': 'application/json'
+      };
+      const resp = await fetch(endpoint, {
+        method: 'GET',
+        headers: headers,
+        credentials: 'include'
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.id_str) userId = data.id_str;
+        if (data.screen_name) screenName = data.screen_name;
+        if (data.profile_image_url_https) {
+          avatarUrl = upgradeAvatarUrl(data.profile_image_url_https);
+        }
+        if (avatarUrl) break;
+      }
+    } catch (e) {}
+  }
+
+  // 3. Fallback: GraphQL UserByRestId using userId
+  if ((!avatarUrl || !screenName) && userId) {
+    const queryIds = [
+      dynamicConfig.queryIds['UserByRestId'],
+      ...USER_BY_REST_ID_QUERY_IDS
+    ].filter(Boolean);
+
+    const variables = { userId: userId, withSafetyModeUserFields: true };
+    const features = dynamicConfig.features || GRAPHQL_FEATURES;
+
+    for (const qId of queryIds) {
+      try {
+        const gqlUrl = `${session.baseUrl}/i/api/graphql/${qId}/UserByRestId?variables=${encodeURIComponent(
+          JSON.stringify(variables)
+        )}&features=${encodeURIComponent(JSON.stringify(features))}`;
+        const resp = await fetch(gqlUrl, {
+          method: 'GET',
+          headers: buildApiHeaders(session.ct0),
+          credentials: 'include'
+        });
+        if (resp.ok) {
+          const json = await resp.json();
+          const userResult = json?.data?.user?.result;
+          const rawAvatar =
+            userResult?.avatar?.imageURL ||
+            userResult?.legacy?.profile_image_url_https;
+          if (rawAvatar && !avatarUrl) {
+            avatarUrl = upgradeAvatarUrl(rawAvatar);
+          }
+          if (!screenName) {
+            screenName = userResult?.legacy?.screen_name || userResult?.core?.screen_name;
+          }
+          if (avatarUrl) break;
+        }
+      } catch (e) {}
+    }
+  }
+
+  // 4. Fallback: users/show.json REST endpoint
+  if ((!avatarUrl || !screenName) && userId) {
+    try {
+      const headers = buildApiHeaders(session.ct0);
+      const resp = await fetch(`${session.baseUrl}/1.1/users/show.json?user_id=${userId}`, {
+        method: 'GET',
+        headers: headers,
+        credentials: 'include'
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.profile_image_url_https && !avatarUrl) {
+          avatarUrl = upgradeAvatarUrl(data.profile_image_url_https);
+        }
+        if (data.screen_name && !screenName) {
+          screenName = data.screen_name;
+        }
+      }
+    } catch (e) {}
+  }
+
+  const result = { userId, screenName, avatarUrl };
+  if (avatarUrl || userId || screenName) {
+    cachedAuthUser = result;
+  }
+  if (avatarUrl) {
+    try {
+      chrome.storage.local.set({ cachedMyAvatar: avatarUrl });
+    } catch (e) {}
+  }
+
+  return result;
 }
 
 /**
@@ -1283,6 +1385,33 @@ async function startBackupJob(userOptions) {
 
 // Runtime message handler for popup commands
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'GET_LOGGED_IN_USER' || message.action === 'GET_AUTH_USER') {
+    (async () => {
+      try {
+        if (cachedAuthUser && cachedAuthUser.avatarUrl) {
+          sendResponse({ ok: true, user: cachedAuthUser });
+          return;
+        }
+
+        const session = await extractSessionCookies();
+        if (!session.ct0 || !session.authToken) {
+          sendResponse({ ok: false, error: 'Not authenticated on Twitter/X' });
+          return;
+        }
+
+        const user = await getAuthenticatedUser(session);
+        if (user && (user.avatarUrl || user.userId || user.screenName)) {
+          cachedAuthUser = user;
+          sendResponse({ ok: true, user });
+        } else {
+          sendResponse({ ok: false, error: 'User profile not found' });
+        }
+      } catch (err) {
+        sendResponse({ ok: false, error: err.message });
+      }
+    })();
+    return true; // Keep message channel open for async response
+  }
   if (message.action === 'START_JOB') {
     const targetHandle = message.twitterHandle || message.handle || 'Twitter';
     startExtractionJob(targetHandle, message.userId, message.options, message.avatarUrl);
