@@ -69,11 +69,10 @@ const TRANSLATIONS = {
     creatorText: 'Created with ❤️ By n10s_exe',
     btnFollow: 'Follow',
     btnGithub: 'GitHub',
-    btnSupportDev: 'Support Dev (USDT TRC20)',
+    btnSupportDev: 'Support Dev (BNB Smart Chain)',
     btnCopy: 'Copy',
-    btnAddressCopied: 'Address Copied! (TRC20)',
+    btnAddressCopied: 'Address Copied! (BEP20)',
     btnCopiedPill: '✓ Copied',
-    solidarityText: 'Free Palestine',
     errSelectMedia: 'Select at least Images or Videos to download.',
     errSelectBackup: 'Select at least Bookmarks or Likes to back up.'
   },
@@ -139,11 +138,10 @@ const TRANSLATIONS = {
     creatorText: 'صُنع بـ ❤️ بواسطة n10s_exe',
     btnFollow: 'متابعة',
     btnGithub: 'جيت هاب',
-    btnSupportDev: 'دعم المطور (USDT TRC20)',
+    btnSupportDev: 'دعم المطور (BNB Smart Chain)',
     btnCopy: 'نسخ',
-    btnAddressCopied: 'تم نسخ العنوان! (TRC20)',
+    btnAddressCopied: 'تم نسخ العنوان! (BEP20)',
     btnCopiedPill: '✓ تم النسخ',
-    solidarityText: 'Free Palestine',
     errSelectMedia: 'يرجى تحديد الصور أو الفيديوهات على الأقل للتحميل.',
     errSelectBackup: 'يرجى تحديد الإشارات المرجعية أو الإعجابات على الأقل للنسخ الاحتياطي.'
   }
@@ -208,7 +206,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // DOM Elements - Creator & Footer Actions
   const linkFollowX = document.getElementById('linkFollowX');
   const linkGithub = document.getElementById('linkGithub');
-  const btnDonateUsdt = document.getElementById('btnDonateUsdt');
+  const btnDonateBnb = document.getElementById('btnDonateBnb') || document.getElementById('btnDonateUsdt');
   const supportBtnText = document.getElementById('supportBtnText');
   const copyBadgeText = document.getElementById('copyBadgeText');
 
@@ -633,23 +631,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Developer Support: Click-to-copy USDT (TRC20) wallet address
-  const USDT_TRC20_WALLET = 'TEQFQ3yZejzivZ8u2rVUp1QKQCzAgrEtjk';
-  if (btnDonateUsdt && supportBtnText) {
+  // Developer Support: Click-to-copy BNB Smart Chain (BEP20) wallet address
+  const BNB_BEP20_WALLET = '0x6D6637cbea1618AeBc626Bb3eBFa623fD55639C1';
+  if (btnDonateBnb && supportBtnText) {
     let copyTimeout = null;
-    btnDonateUsdt.addEventListener('click', async (e) => {
+    btnDonateBnb.addEventListener('click', async (e) => {
       e.preventDefault();
 
       // 1. Copy to clipboard via standard API or fallback
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(USDT_TRC20_WALLET);
+          await navigator.clipboard.writeText(BNB_BEP20_WALLET);
         } else {
           throw new Error('Clipboard API not available');
         }
       } catch (err) {
         const textarea = document.createElement('textarea');
-        textarea.value = USDT_TRC20_WALLET;
+        textarea.value = BNB_BEP20_WALLET;
         textarea.style.position = 'fixed';
         textarea.style.opacity = '0';
         document.body.appendChild(textarea);
@@ -659,14 +657,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // 2. Visual feedback state
-      btnDonateUsdt.classList.add('copied');
+      btnDonateBnb.classList.add('copied');
       supportBtnText.textContent = t('btnAddressCopied');
       if (copyBadgeText) copyBadgeText.textContent = t('btnCopiedPill');
 
       // 3. Revert after 2 seconds
       if (copyTimeout) clearTimeout(copyTimeout);
       copyTimeout = setTimeout(() => {
-        btnDonateUsdt.classList.remove('copied');
+        btnDonateBnb.classList.remove('copied');
         supportBtnText.textContent = t('btnSupportDev');
         if (copyBadgeText) copyBadgeText.textContent = t('btnCopy');
       }, 2000);

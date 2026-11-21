@@ -24,6 +24,6 @@ A lightweight and efficient Chrome/Brave extension designed to download high-qua
 ## Support & Attribution
 
 If you find this tool helpful and want to support further development:
-* **USDT (TRC20):** `TEQFQ3yZejzivZ8u2rVUp1QKQCzAgrEtjk`
+* **BNB Smart Chain (BEP20):** `0x6D6637cbea1618AeBc626Bb3eBFa623fD55639C1`
 
 Created by [NasEEm (n10s_exe)](https://github.com/im-n10s)

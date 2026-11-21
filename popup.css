@@ -63,13 +63,11 @@
   --social-btn-border: rgba(255, 255, 255, 0.12);
   --social-btn-color: #ffffff;
   --social-btn-icon: #ffffff;
-  --usdt-btn-bg: rgba(38, 161, 123, 0.09);
-  --usdt-btn-border: rgba(38, 161, 123, 0.28);
-  --usdt-btn-hover: rgba(38, 161, 123, 0.18);
+  --bnb-btn-bg: rgba(243, 186, 47, 0.09);
+  --bnb-btn-border: rgba(243, 186, 47, 0.3);
+  --bnb-btn-hover: rgba(243, 186, 47, 0.18);
   --copy-pill-bg: rgba(255, 255, 255, 0.08);
   --copy-pill-border: rgba(255, 255, 255, 0.08);
-  --solidarity-border: rgba(255, 255, 255, 0.08);
-  --solidarity-color: #94a3b8;
 
   /* Radii */
   --radius-xs: 6px;
@@ -129,13 +127,11 @@
   --social-btn-border: rgba(15, 23, 42, 0.12);
   --social-btn-color: #0f172a;
   --social-btn-icon: #0f172a;
-  --usdt-btn-bg: rgba(38, 161, 123, 0.1);
-  --usdt-btn-border: rgba(38, 161, 123, 0.35);
-  --usdt-btn-hover: rgba(38, 161, 123, 0.2);
+  --bnb-btn-bg: rgba(243, 186, 47, 0.12);
+  --bnb-btn-border: rgba(217, 119, 6, 0.35);
+  --bnb-btn-hover: rgba(243, 186, 47, 0.22);
   --copy-pill-bg: rgba(15, 23, 42, 0.06);
   --copy-pill-border: rgba(15, 23, 42, 0.1);
-  --solidarity-border: rgba(15, 23, 42, 0.08);
-  --solidarity-color: #475569;
 }
 
 * {
@@ -1320,13 +1316,14 @@ body {
   width: 100%;
 }
 
+.support-bnb-btn,
 .support-usdt-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background: var(--usdt-btn-bg);
-  border: 1px solid var(--usdt-btn-border);
+  background: var(--bnb-btn-bg);
+  border: 1px solid var(--bnb-btn-border);
   color: var(--creator-text);
   padding: 5px 8px;
   border-radius: 8px;
@@ -1338,22 +1335,30 @@ body {
   letter-spacing: 0.2px;
 }
 
+.support-bnb-btn:hover,
 .support-usdt-btn:hover {
-  background: var(--usdt-btn-hover);
-  border-color: rgba(38, 161, 123, 0.55);
-  box-shadow: 0 0 12px rgba(38, 161, 123, 0.25);
+  background: var(--bnb-btn-hover);
+  border-color: rgba(243, 186, 47, 0.55);
+  box-shadow: 0 0 12px rgba(243, 186, 47, 0.25);
   transform: translateY(-0.5px);
 }
 
+.support-bnb-btn:active,
 .support-usdt-btn:active {
   transform: translateY(0.5px);
 }
 
+.support-bnb-btn.copied,
 .support-usdt-btn.copied {
-  background: linear-gradient(135deg, rgba(38, 161, 123, 0.35), rgba(16, 185, 129, 0.35));
-  border-color: #10b981;
-  color: #34d399;
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+  background: linear-gradient(135deg, rgba(243, 186, 47, 0.35), rgba(234, 179, 8, 0.35));
+  border-color: #f59e0b;
+  color: #fef08a;
+  box-shadow: 0 0 14px rgba(243, 186, 47, 0.45);
+}
+
+[data-theme="light"] .support-bnb-btn.copied,
+[data-theme="light"] .support-usdt-btn.copied {
+  color: #92400e;
 }
 
 .support-left {
@@ -1362,6 +1367,7 @@ body {
   gap: 7px;
 }
 
+.bnb-icon-svg,
 .usdt-icon-svg {
   flex-shrink: 0;
   border-radius: 50%;
@@ -1381,63 +1387,23 @@ body {
   transition: all 0.2s ease;
 }
 
+.support-bnb-btn:hover .copy-pill,
 .support-usdt-btn:hover .copy-pill {
-  background-color: rgba(38, 161, 123, 0.3);
+  background-color: rgba(243, 186, 47, 0.3);
   color: #ffffff;
-  border-color: rgba(38, 161, 123, 0.4);
+  border-color: rgba(243, 186, 47, 0.4);
 }
 
+[data-theme="light"] .support-bnb-btn:hover .copy-pill,
+[data-theme="light"] .support-usdt-btn:hover .copy-pill {
+  color: #78350f;
+}
+
+.support-bnb-btn.copied .copy-pill,
 .support-usdt-btn.copied .copy-pill {
-  background-color: #10b981;
+  background-color: #f59e0b;
   color: #ffffff;
-  border-color: #10b981;
-}
-
-/* Solidarity Row & Palestine Flag */
-.solidarity-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5.5px;
-  width: 100%;
-  padding-top: 5px;
-  border-top: 1px dashed var(--solidarity-border);
-  margin-top: 1px;
-}
-
-.solidarity-text {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  color: var(--solidarity-color);
-  opacity: 0.9;
-  transition: opacity 0.2s ease, color 0.2s ease;
-  user-select: text;
-}
-
-.solidarity-row:hover .solidarity-text {
-  opacity: 1;
-  color: var(--text-primary);
-}
-
-.palestine-flag-svg {
-  width: 16px;
-  height: 11px;
-  border-radius: 2px;
-  display: inline-block;
-  vertical-align: middle;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
-  overflow: hidden;
-}
-
-[data-theme="light"] .palestine-flag-svg {
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
-}
-
-.solidarity-row:hover .palestine-flag-svg {
-  transform: scale(1.08);
+  border-color: #f59e0b;
 }
 
 .hidden {
